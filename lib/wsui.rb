@@ -8,7 +8,7 @@ module WSUI
       f.call self
     end
   end
-  def self.start port, html, &b
+  def self.start port, html = "", &b
     app = Module.new do
       @connections = Set.new
       @port = port
@@ -47,7 +47,7 @@ module WSUI
                 function setup() {
                   frameRate(2);
                   createCanvas(windowWidth, windowHeight);
-                  textAlign(LEFT, CENTER);
+                  textAlign(CENTER, CENTER);
                   connectWebsocket("ws://localhost:#{@port}");
                 };
                 function messageReceived(data) {
@@ -65,7 +65,7 @@ module WSUI
                     };
                     if (Number.isFinite(o) || typeof o === "string" || o instanceof String) {
                       textSize(min(100, textSize() * width / textWidth(o)));
-                      text(o, left, top + height / 2)
+                      text(o, left + width / 2, top + height / 2)
                     } else o.forEach( function(e, i) {
                       fh(e, left, top + height / o.length * i, width, height / o.length);
                     } );
@@ -78,7 +78,7 @@ module WSUI
                     };
                     if (Number.isFinite(o) || typeof o === "string" || o instanceof String) {
                       textSize(min(100, textSize() * width / textWidth(o)));
-                      text(o, left, top + height / 2)
+                      text(o, left + width / 2, top + height / 2)
                     } else o.forEach( function(e, i) {
                       fv(e, left + width / o.length * i, top, width / o.length, height);
                     } );
