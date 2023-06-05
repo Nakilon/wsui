@@ -24,10 +24,7 @@ WSUI.start do |*|
   else
     (0..2).map do |i|
       (0..2).map do |j|
-        WSUI::S.new state[i][j], ( lambda do |*|
-          next if state[i][j]
-          turn = (%w{ X O } - [state[i][j] = turn])[0]
-        end )
+        WSUI::S.new state[i][j], ->*{ turn = (%w{ X O } - [state[i][j] = turn])[0] unless state[i][j] }
       end
     end
   end
