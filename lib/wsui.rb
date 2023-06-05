@@ -8,7 +8,7 @@ module WSUI
       f.call self
     end
   end
-  def self.start port, html = "", &b
+  def self.start port = 7001, fps = 5, html = "", &b
     app = Module.new do
       @connections = Set.new
       @port = port
@@ -48,7 +48,7 @@ module WSUI
                   frameRate(2);
                   createCanvas(windowWidth, windowHeight);
                   textAlign(CENTER, CENTER);
-                  connectWebsocket("ws://localhost:#{@port}");
+                  connectWebsocket("ws://" + window.location.host);
                 };
                 function messageReceived(data) {
                   all = JSON.parse(data);
@@ -58,11 +58,11 @@ module WSUI
                   clear();
                   regions = [];
                   let fv = function(o, left, top, width, height) {
-                    if (o === null) return;
-                    if (o.wsui_id) {
+                    if (o && o.wsui_id) {
                       regions.push({id: o.wsui_id, left: left, top: top, width: width, height: height});
                       o = o.value;
                     };
+                    if (o === null) return;
                     if (Number.isFinite(o) || typeof o === "string" || o instanceof String) {
                       textSize(min(100, textSize() * width / textWidth(o)));
                       text(o, left + width / 2, top + height / 2)
@@ -71,11 +71,11 @@ module WSUI
                     } );
                   };
                   let fh = function(o, left, top, width, height) {
-                    if (o === null) return;
                     if (o.wsui_id) {
                       regions.push({id: o.wsui_id, left: left, top: top, width: width, height: height});
                       o = o.value;
                     };
+                    if (o === null) return;
                     if (Number.isFinite(o) || typeof o === "string" || o instanceof String) {
                       textSize(min(100, textSize() * width / textWidth(o)));
                       text(o, left + width / 2, top + height / 2)
