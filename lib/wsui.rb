@@ -4,7 +4,7 @@ module WSUI
   require "async/http/endpoint"
   require "falcon"
   S = Struct.new :value, :click
-  def self.start port = 7001, fps = 5, html = "", &block
+  def self.start port = 7001, html = "", fps: 5, &block
     app = Module.new do
       @connections = Set.new
       @port = port
@@ -24,8 +24,13 @@ module WSUI
           @connections << connection
           while message = connection.read
             if message.key? :id
-              t = ObjectSpace._id2ref message[:id]
-              t.click.call t if t.click
+              t = begin
+                ObjectSpace._id2ref message[:id]
+              rescue RangeError
+                # maybe when we click too fast and the page has 'old' refs
+              end
+              p t
+              t.click&.call t if t.respond_to? :click
             end
             t = f.call(@block.call(message)).to_json
             @connections.each do |connection|
@@ -46,6 +51,7 @@ module WSUI
               <script>
                 var all = null;
                 var regions = [];
+                var need = false;   // force draw() on click
                 function setup() {
                   frameRate(#{@fps});
                   createCanvas(windowWidth, windowHeight);
@@ -53,7 +59,12 @@ module WSUI
                   connectWebsocket("ws://" + window.location.host);
                 };
                 function messageReceived(data) {
+                  // console.log(data);
                   all = JSON.parse(data);
+                  if (need) {
+                    need = false;
+                    draw();
+                  }
                 };
                 function draw() {
                   // console.log(all);
@@ -92,6 +103,7 @@ module WSUI
                   regions.some( function(e) {
                     if (mouseX >= e.left && mouseX <= e.left + e.width && mouseY >= e.top && mouseY <= e.top + e.height) {
                       sendMessage({id: e.id});
+                      need = true;
                       return true;
                     };
                   } );
