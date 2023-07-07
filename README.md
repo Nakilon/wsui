@@ -1,6 +1,6 @@
 # gem WSUI
 
-Websockets-based HTML GUI framework to access (view and edit) Ruby runtime objects in:
+Websockets-based HTML GUI framework to access (view and edit) your Ruby runtime objects in:
 * interactive (as games or CLI alternatives)
 * semi-
 * non-interactive way (as a monitoring plugin for your background job)

@@ -1,7 +1,7 @@
 Gem::Specification.new do |spec|
   spec.name         = "wsui"
   spec.version      = "0.0.0"
-  spec.summary      = "websockets-based HTML GUI for Ruby runtime objects"
+  spec.summary      = "websockets-based HTML GUI framework to access runtime objects"
   spec.metadata     = {"source_code_uri" => "https://github.com/nakilon/wsui"}
 
   spec.author       = "Victor Maslov aka Nakilon"

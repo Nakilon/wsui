@@ -96,6 +96,7 @@ module WSUI
                       fv(e, left + width / o.length * i, top, width / o.length, height);
                     } );
                   };
+                  // console.log(all);
                   fv(all, 0, 0, windowWidth, windowHeight);
                   sendMessage({});
                 };
