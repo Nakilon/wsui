@@ -1,7 +1,13 @@
 # gem WSUI
-websockets-based HTML GUI framework to access (view and edit) your Ruby runtime objects
+
+Websockets-based HTML GUI framework to access (view and edit) Ruby runtime objects in:
+* interactive (as games or CLI alternatives)
+* semi-
+* non-interactive way (as a monitoring plugin for your background job)
 
 ## Examples
+
+### interactive
 
 ### basic single variable access [example code](examples/plus-minus.rb)
 
@@ -16,3 +22,7 @@ websockets-based HTML GUI framework to access (view and edit) your Ruby runtime 
 ### [examples / Calculator](examples/calculator.rb)
 
 ![image](https://github.com/Nakilon/wsui/assets/2870363/3782f794-a94a-4010-8641-2b93fe7d71a5)
+
+### [examples / Collatz](examples/collatz.rb) conjecture verifier
+
+![image](https://github.com/Nakilon/wsui/assets/2870363/64f70543-7410-40fa-ad73-657cef37d7f4)
