@@ -3,16 +3,13 @@ module WSUI
   require "async/websocket/adapters/rack"
   require "async/http/endpoint"
   require "falcon"
-  S = Struct.new :value, :f do
-    def click
-      f.call self
-    end
-  end
-  def self.start port = 7001, fps = 5, html = "", &b
+  S = Struct.new :value, :click
+  def self.start port = 7001, fps = 5, html = "", &block
     app = Module.new do
       @connections = Set.new
       @port = port
-      @b = b
+      @fps = fps
+      @block = block
       def self.call env
         f = lambda do |o|
           if o.is_a? S
@@ -26,15 +23,20 @@ module WSUI
         Async::WebSocket::Adapters::Rack.open env, protocols: %w{ ws } do |connection|
           @connections << connection
           while message = connection.read
-            ObjectSpace._id2ref(message[:id]).click if message.key? :id
-            t = f.call(@b.call(message)).to_json
+            if message.key? :id
+              t = ObjectSpace._id2ref message[:id]
+              t.click.call t if t.click
+            end
+            t = f.call(@block.call(message)).to_json
             @connections.each do |connection|
               connection.write t
               connection.flush
             end
           end
+        rescue Protocol::WebSocket::ClosedError
+          p :closed
         ensure
-          @connections.delete(connection)
+          @connections.delete connection
         end or [200, [], [<<~HEREDOC]]
           <html>
             <head>
@@ -45,7 +47,7 @@ module WSUI
                 var all = null;
                 var regions = [];
                 function setup() {
-                  frameRate(2);
+                  frameRate(#{@fps});
                   createCanvas(windowWidth, windowHeight);
                   textAlign(CENTER, CENTER);
                   connectWebsocket("ws://" + window.location.host);
@@ -54,7 +56,7 @@ module WSUI
                   all = JSON.parse(data);
                 };
                 function draw() {
-                  console.log(all);
+                  // console.log(all);
                   clear();
                   regions = [];
                   let fv = function(o, left, top, width, height) {
@@ -64,20 +66,20 @@ module WSUI
                     };
                     if (o === null) return;
                     if (Number.isFinite(o) || typeof o === "string" || o instanceof String) {
-                      textSize(min(100, textSize() * width / textWidth(o)));
+                      textSize(min(100, textSize() * min(height / textWidth("W"), width / textWidth(o))));
                       text(o, left + width / 2, top + height / 2)
                     } else o.forEach( function(e, i) {
                       fh(e, left, top + height / o.length * i, width, height / o.length);
                     } );
                   };
                   let fh = function(o, left, top, width, height) {
-                    if (o.wsui_id) {
+                    if (o && o.wsui_id) {
                       regions.push({id: o.wsui_id, left: left, top: top, width: width, height: height});
                       o = o.value;
                     };
                     if (o === null) return;
                     if (Number.isFinite(o) || typeof o === "string" || o instanceof String) {
-                      textSize(min(100, textSize() * width / textWidth(o)));
+                      textSize(min(100, textSize() * min(height / textWidth("W"), width / textWidth(o))));
                       text(o, left + width / 2, top + height / 2)
                     } else o.forEach( function(e, i) {
                       fv(e, left + width / o.length * i, top, width / o.length, height);
@@ -101,11 +103,13 @@ module WSUI
         HEREDOC
       end
     end
-    Async do
-      Falcon::Server.new(
-        Falcon::Server.middleware(app),
-        Async::HTTP::Endpoint.parse("http://0.0.0.0:#{port}")
-      ).run.each &:wait
+    Thread.new do
+      Async do
+        Falcon::Server.new(
+          Falcon::Server.middleware(app),
+          Async::HTTP::Endpoint.parse("http://0.0.0.0:#{port}")
+        ).run
+      end
     end
   end
 end

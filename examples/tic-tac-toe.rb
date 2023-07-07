@@ -29,3 +29,4 @@ WSUI.start do |*|
     end
   end
 end
+gets

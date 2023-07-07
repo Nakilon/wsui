@@ -1,4 +1,4 @@
-# WSUI -- websockets-based HTML UI framework for your Ruby program objects
+# gem WSUI -- websockets-based HTML GUI framework for Ruby runtime
 
 ## Examples
 

@@ -52,6 +52,7 @@ GEM
     localhost (1.1.10)
     mapping (1.1.1)
     nio4r (2.5.9)
+    pairing_heap (3.0.1)
     process-metrics (0.2.1)
       console (~> 1.8)
       samovar (~> 2.1)
@@ -76,6 +77,7 @@ PLATFORMS
   x86_64-darwin-20
 
 DEPENDENCIES
+  pairing_heap
   wsui!
 
 BUNDLED WITH
