@@ -3,7 +3,10 @@ past = Set.new
 
 array = []
 require "../lib/wsui"
-WSUI.start do |*|
+
+app = WSUI.start animate: false
+
+def prepare_message(array, past)
   t = array.drop(1).map.with_index(1).to_a
   i = t.index{ |_,i| !_ || !past.include?(i) }
   [[nil, "N", "depth", nil]] + t.drop([i.to_i-2,0].max).chunk{|_,|!_}.flat_map do |flag, chunk|
@@ -18,6 +21,7 @@ push = lambda do |d, n, from = nil|
   array[n] = [d, from]
 end
 push.call 0, 1
+
 loop do
   d, n = heap.pop_with_priority
   sleep 2
@@ -27,4 +31,5 @@ loop do
     push.call d+1, a, n unless past.include? a if b.zero?
   end
   past.add n
+  app.publish prepare_message(array, past) 
 end

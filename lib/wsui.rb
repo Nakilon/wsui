@@ -4,22 +4,33 @@ module WSUI
   require "async/http/endpoint"
   require "falcon"
   S = Struct.new :value, :click
-  def self.start port = 7001, html = "", fps: 5, &block
+  def self.start port = 7001, html = "", fps: 5, animate: true, &block
     app = Module.new do
+      @animate = animate
       @connections = Set.new
       @port = port
       @fps = fps
       @block = block
-      def self.call env
-        f = lambda do |o|
-          if o.is_a? S
-            {wsui_id: o.__id__, value: o.value}
-          elsif o.respond_to? :each
-            o.map &f
-          else
-            o
-          end
+
+      def self.f(o)
+        if o.is_a? S
+          {wsui_id: o.__id__, value: o.value}
+        elsif o.respond_to? :each
+          o.map &method(:f)
+        else
+          o
         end
+      end
+
+      def self.publish(message)
+        @connections.each do |connection|
+          puts "write to connection #{connection}"
+          connection.write f(message).to_json
+          connection.flush
+        end
+      end
+
+      def self.call env
         Async::WebSocket::Adapters::Rack.open env, protocols: %w{ ws } do |connection|
           @connections << connection
           while message = connection.read
@@ -32,11 +43,8 @@ module WSUI
               p t
               t.click&.call t if t.respond_to? :click
             end
-            t = f.call(@block.call(message)).to_json
-            @connections.each do |connection|
-              connection.write t
-              connection.flush
-            end
+
+            publish(@block&.call(message) || message) 
           end
         rescue Protocol::WebSocket::ClosedError
           p :closed
@@ -98,7 +106,6 @@ module WSUI
                   };
                   // console.log(all);
                   fv(all, 0, 0, windowWidth, windowHeight);
-                  sendMessage({});
                 };
                 function mouseClicked() {
                   regions.some( function(e) {
@@ -109,6 +116,10 @@ module WSUI
                     };
                   } );
                 };
+
+                #{@animate ? 'setInterval(' : 'setTimeout('} function () {
+                  sendMessage({});
+                }, 300);
               </script>
             </head>
             <body style="margin:0"><main></main></body>
@@ -124,5 +135,6 @@ module WSUI
         ).run
       end
     end
+    return app
   end
 end
